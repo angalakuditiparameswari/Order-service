@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final WebClient webClient;
+    private final WebClient.Builder webClient;
 
     public void placeOrder(OrderRequest orderRequest) {
         Order order = new Order();
@@ -39,8 +39,8 @@ public class OrderService {
 
         List<String> skuCodes = order.getOrderItemsList().stream().map(OrderItems::getSkuCode).toList();
 
-        InventoryResponse[] result = webClient.get()
-                .uri("http://localhost:8082/api/inventory", uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
+        InventoryResponse[] result = webClient.build().get()
+                .uri("http://Inventory-service/api/inventory", uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
                 .retrieve()
                 .bodyToMono(InventoryResponse[].class)
                 .block();
@@ -50,8 +50,8 @@ public class OrderService {
 
         if(allInStock){
             orderRepository.save(order);
-            webClient.put()
-                    .uri("http://localhost:8082/api/inventory/update")
+            webClient.build().put()
+                    .uri("http://Inventory-service/api/inventory/update")
                     .bodyValue(orderRequest)
                     .retrieve()
                     .toBodilessEntity()
